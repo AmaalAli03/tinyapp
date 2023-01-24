@@ -8,17 +8,23 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  const longURL = req.body.longURL;
+  urlDatabase[id] = longURL;
+  res.redirect("/urls");
+});
 app.post("/urls", (req, res) => {
   const key = generateRandomString();
-  const longURL = req.body.longURL
-  urlDatabase[key] = longURL
+  const longURL = req.body.longURL;
+  urlDatabase[key] = longURL;
   console.log(req.body); // Log the POST request body to the console
   res.redirect(`/urls/${key}`); // Respond with 'Ok' (we will replace this)
 });
-app.post("/urls/:id/delete",(req, res) => {
+app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
-  res.redirect ("/urls");
-})
+  res.redirect("/urls");
+});
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -42,7 +48,7 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 app.get("/u/:id", (req, res) => {
- const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
@@ -52,6 +58,6 @@ app.listen(PORT, () => {
 });
 
 function generateRandomString() {
-  const result = Math.random().toString(36).substring(2,8);
+  const result = Math.random().toString(36).substring(2, 8);
   return result;
 }
