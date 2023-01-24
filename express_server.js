@@ -8,6 +8,11 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+app.post("/login", (req, res) => {
+  let loginCookie = req.body.username;
+  res.cookie("username", loginCookie);
+  res.redirect("/urls");
+});
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = req.body.longURL;
