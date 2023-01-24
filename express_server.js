@@ -15,6 +15,10 @@ app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   res.redirect(`/urls/${key}`); // Respond with 'Ok' (we will replace this)
 });
+app.post("/urls/:id/delete",(req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect ("/urls");
+})
 
 app.get("/", (req, res) => {
   res.send("Hello!");
