@@ -8,8 +8,14 @@ app.use(cookieParser());
 const { getUserByEmail, generateRandomString } = require("./helpers");
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 const users = {
   userRandomID: {
@@ -68,7 +74,7 @@ app.post("/login", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = req.body.longURL;
-  urlDatabase[id] = longURL;
+  urlDatabase[id].longURL = longURL;
   res.redirect("/urls");
 });
 
@@ -79,7 +85,7 @@ app.post("/urls", (req, res) => {
   } else {
     const key = generateRandomString();
     const longURL = req.body.longURL;
-    urlDatabase[key] = longURL;
+    urlDatabase[key].longURL = longURL;
     console.log(req.body); // Log the POST request body to the console
     res.redirect(`/urls/${key}`); // Respond with 'Ok' (we will replace this)
   }
@@ -146,7 +152,7 @@ app.get("/urls/:id", (req, res) => {
   const user = users[userId];
   const templateVars = {
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
     user,
 
   };
@@ -158,7 +164,7 @@ app.get("/u/:id", (req, res) => {
   if (!urlDatabase[shortUrl]) {
     res.send("<html><body>ERROR: This id does not exist </body></html>\n");
   } else {
-    const longURL = urlDatabase[req.params.id];
+    const longURL = urlDatabase[req.params.id].longURL;
     res.redirect(longURL);
   }
 });
