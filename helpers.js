@@ -12,7 +12,19 @@ function getUserByEmail(email, users) {
   return null;
 }
 
-module.exports={
-  generateRandomString,
-  getUserByEmail
+function urlsForUser(id, urlDatabase) {
+  const userUrls = {};
+  for (let shortUrl in urlDatabase) {
+    if (urlDatabase[shortUrl].userID === id) {
+      //... only the key value pairs inside the object {}
+      userUrls[shortUrl] = urlDatabase[shortUrl].longURL;
+    }
+  }
+  return userUrls;
 }
+
+module.exports = {
+  generateRandomString,
+  getUserByEmail,
+  urlsForUser
+};

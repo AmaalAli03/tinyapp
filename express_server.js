@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-const { getUserByEmail, generateRandomString } = require("./helpers");
+const { getUserByEmail, generateRandomString, urlsForUser } = require("./helpers");
 
 const urlDatabase = {
   b6UTxQ: {
@@ -52,9 +52,6 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // res.cookie('user_id', req.body.username);
-  // res.redirect("/urls");
-  const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
   const user = getUserByEmail(email, users);
@@ -66,32 +63,62 @@ app.post("/login", (req, res) => {
     return res.status(403).send("ERROR: Please enter a valid email. ");
   }
 
-  users[id] = { id, email, password };
-  res.cookie('user_id', id);
+  // users[id] = { id, email, password };
+  res.cookie('user_id', user.id);
+
   res.redirect("/urls");
 });
+//you have to check if the shorturl belongs to the user that is in the cookie 
 
 app.post("/urls/:id", (req, res) => {
-  const id = req.params.id;
+  const userId = req.cookies.user_id;
+  const shortUrl = req.params.id;
   const longURL = req.body.longURL;
-  urlDatabase[id].longURL = longURL;
+  if (!userId) {
+    return res.send("<html><body>ERROR: You are not logged in! </body></html>\n");
+  }
+
+  if (!urlDatabase[shortUrl]) {
+    return res.send("<html><body>ERROR: Shorturl does not exist! </body></html>\n");
+  }
+
+  const userUrls = urlsForUser(userId, urlDatabase);
+  if (!userUrls[shortUrl]) {
+    return res.send("<html><body>ERROR: You do not have access to this Url! </body></html>\n");
+  }
+
+  urlDatabase[shortUrl].longURL = longURL;
   res.redirect("/urls");
 });
 
 app.post("/urls", (req, res) => {
-  const userId = req.cookies.user_id;
-  if (!userId) {
-    res.send("<html><body>You cannot shorten Urls because you are not logged in.</body></html>\n");
-  } else {
-    const key = generateRandomString();
-    const longURL = req.body.longURL;
-    urlDatabase[key].longURL = longURL;
-    console.log(req.body); // Log the POST request body to the console
-    res.redirect(`/urls/${key}`); // Respond with 'Ok' (we will replace this)
-  }
+  const userID = req.cookies.user_id;
+  if (!userID) {
+    return res.send("<html><body>You cannot shorten Urls because you are not logged in.</body></html>\n");
+  } 
+  const shortUrl = generateRandomString();
+  const longURL = req.body.longURL;
+  urlDatabase[shortUrl] = { longURL, userID };
+
+  res.redirect(`/urls/${shortUrl}`); 
 });
 
 app.post("/urls/:id/delete", (req, res) => {
+  const userId = req.cookies.user_id;
+  const shortUrl = req.params.id;
+  if (!userId) {
+    return res.send("<html><body>ERROR: You are not logged in! </body></html>\n");
+  }
+
+  if (!urlDatabase[shortUrl]) {
+    return res.send("<html><body>ERROR: Shorturl does not exist! </body></html>\n");
+  }
+
+  const userUrls = urlsForUser(userId, urlDatabase);
+  if (!userUrls[shortUrl]) {
+    return res.send("<html><body>ERROR: You do not have access to this Url! </body></html>\n");
+  }
+
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
@@ -142,21 +169,40 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls", (req, res) => {
   //username is the property within the cookies object
   const userId = req.cookies.user_id;
-  const user = users[userId];
-  const templateVars = { urls: urlDatabase, user, };
-  res.render("urls_index", templateVars);
+  if (!userId) {
+    res.send("<html><body>You are not logged in!</body></html>\n");
+  } else {
+    const userUrls = urlsForUser(userId, urlDatabase);
+    const user = users[userId];
+    const templateVars = { urls: userUrls, user };
+    res.render("urls_index", templateVars);
+  }
 });
 // route is /:id is parameters in its path 
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies.user_id;
+  const shortUrl = req.params.id;
+  if (!userId) {
+    return res.send("<html><body>ERROR: You are not logged in! </body></html>\n");
+  }
+
+  if (!urlDatabase[shortUrl]) {
+    return res.send("<html><body>ERROR: Shorturl does not exist! </body></html>\n");
+  }
+
+  const userUrls = urlsForUser(userId, urlDatabase);
+  if (!userUrls[shortUrl]) {
+    return res.send("<html><body>ERROR: You do not have access to this Url! </body></html>\n");
+  }
+
   const user = users[userId];
   const templateVars = {
-    id: req.params.id,
+    id: shortUrl,
     longURL: urlDatabase[req.params.id].longURL,
     user,
-
   };
   res.render("urls_show", templateVars);
+
 });
 
 app.get("/u/:id", (req, res) => {
