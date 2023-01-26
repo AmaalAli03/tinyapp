@@ -73,11 +73,16 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const key = generateRandomString();
-  const longURL = req.body.longURL;
-  urlDatabase[key] = longURL;
-  console.log(req.body); // Log the POST request body to the console
-  res.redirect(`/urls/${key}`); // Respond with 'Ok' (we will replace this)
+  const userId = req.cookies.user_id;
+  if (!userId) {
+    res.send("<html><body>You cannot shorten Urls because you are not logged in.</body></html>\n");
+  } else {
+    const key = generateRandomString();
+    const longURL = req.body.longURL;
+    urlDatabase[key] = longURL;
+    console.log(req.body); // Log the POST request body to the console
+    res.redirect(`/urls/${key}`); // Respond with 'Ok' (we will replace this)
+  }
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -119,9 +124,13 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const userId = req.cookies.user_id;
-  const user = users[userId];
-  const templateVars = { user, };
-  res.render("urls_new", templateVars);
+  if (!userId) {
+    res.redirect("/login");
+  } else {
+    const user = users[userId];
+    const templateVars = { user, };
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/urls", (req, res) => {
