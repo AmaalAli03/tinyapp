@@ -154,8 +154,13 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  const shortUrl = req.params.id;
+  if (!urlDatabase[shortUrl]) {
+    res.send("<html><body>ERROR: This id does not exist </body></html>\n");
+  } else {
+    const longURL = urlDatabase[req.params.id];
+    res.redirect(longURL);
+  }
 });
 
 
